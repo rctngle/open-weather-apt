@@ -29,8 +29,59 @@ const createImage = (buffer, mode, channel, equalize) => {
 
 	const normalizedMean = normalizeData(signal)
 	signal = normalizedMean[0]
-		
+	const signalMean = normalizedMean[1]
+
+	// const syncStart = convolveWithSync(0, signal.length, signal, signalMean)
+
+	
 }
+
+function convolveWithSync(start, range, normalizedData, signalMean) {
+	const sync = [-1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+
+	let maxVal = 0
+	let maxIndex = 0
+
+	const peaks = []
+	let peak = []
+	const minDist = 50
+	let dist = 0
+
+	for (let i = start; i < start + range; i++) {
+		let sum = 0
+		for (var c = 0; c < sync.length; c++) {
+			if (normalizedData) {
+				sum += (normalizedData[i + c] - signalMean) * sync[c]				
+			}
+		}
+
+		if (sum > 0) {
+
+			peak.push({ index: i, score: sum })
+
+		} else {
+			
+			if (peak.length > 0) {
+				peaks.push(peak)
+			}
+
+			peak = []
+			// console.log('--------')
+		}
+
+		if (sum > maxVal) {
+
+			maxVal = sum
+			maxIndex = i
+		}
+	}
+
+	return {
+		index: maxIndex,
+		score: maxVal,
+	}
+}
+
 
 const resampleWav = buffer => {
 	const result = wav.decode(buffer)
