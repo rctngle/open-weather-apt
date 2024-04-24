@@ -2,10 +2,10 @@ const fs = require('fs')
 const { createImage } = require('./open-weather-apt')
 
 const audioPath = process.argv[2]
-const channel = process.argv[3] || 'AB'
-const mode = process.argv[4] || 'cos'
-const method = process.argv[5] || 'sf'
-const imagePath = process.argv[6] || undefined
+const imagePath = process.argv[3] || 'output.png'
+const channel = process.argv[4] || 'AB'
+const mode = process.argv[5] || 'cos'
+const method = process.argv[6] || 'sf'
 
 // read the wav
 const buffer = fs.readFileSync(audioPath)
