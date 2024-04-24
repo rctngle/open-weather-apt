@@ -1,5 +1,7 @@
 const fs = require('fs')
 const wav = require('node-wav')
+const waveResampler = require('wave-resampler')
+
 const DSP = require('dsp.js')
 const dsp = require('./dsp')
 const FFT = require('fft.js')
@@ -32,15 +34,20 @@ const createImage = (buffer, mode, channel, equalize) => {
 
 const resampleWav = buffer => {
 	const result = wav.decode(buffer)
-	const resampledBuffer = wav.encode(result.channelData, { sampleRate: SAMPLE_RATE, float: true, bitDepth: 32 })
+	const resampledSamples = waveResampler.resample(result.channelData[0], result.sampleRate, SAMPLE_RATE)	
+
+	const resampledBuffer = wav.encode([resampledSamples], {
+		sampleRate: SAMPLE_RATE,
+		float: false, // Use 32-bit float if your data is in float format
+		bitDepth: 16 // Adjust bit depth according to your needs
+	})
+
 	const resampled = wav.decode(resampledBuffer)
 
 	fs.writeFileSync('wav-resampled.wav', resampledBuffer)
 
 	return resampled
 }
-
-
 
 const getImageWidth = channel => {
 	if (channel === 'A') {
