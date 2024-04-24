@@ -4,13 +4,15 @@ const { createImage } = require('./open-weather-apt')
 const audioPath = process.argv[2]
 const channel = process.argv[3] || 'AB'
 const mode = process.argv[4] || 'cos'
-// const imagePath = process.argv[5] || undefined
+const method = process.argv[5] || 'sf'
+const imagePath = process.argv[6] || undefined
 
 // read the wav
 const buffer = fs.readFileSync(audioPath)
 
 // create image
-createImage(buffer, mode, channel, true)
+const outputBuffer = createImage(buffer, mode, channel, method, true)
+fs.writeFileSync(imagePath, outputBuffer)
 
 
 // Example: Write an array to file as JSON

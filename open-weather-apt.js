@@ -1,14 +1,17 @@
 const fs = require('fs')
 const wav = require('node-wav')
 const waveResampler = require('wave-resampler')
+const { createCanvas } = require('canvas')
 
 const DSP = require('dsp.js')
 const dsp = require('./dsp')
 const FFT = require('fft.js')
 
-const SAMPLE_RATE = 12480 // 6240
+const SAMPLE_RATE = 12480 
+const WORDS = SAMPLE_RATE / 2 // 6240
+const FINAL_RATE = SAMPLE_RATE / 3 // 
 
-const createImage = (buffer, mode, channel, equalize) => {
+const createImage = (buffer, mode, channel, method, equalize) => {
 
 	console.log('bessel_i0 test', bessel_i0(2.116625))
 
@@ -19,7 +22,7 @@ const createImage = (buffer, mode, channel, equalize) => {
 	let signal = wavToArray(resampled)
 
 	// high pass and low pass filters
-	signal = bandpassFilter(signal)	
+	// signal = bandpassFilter(signal)	
 
 	// demodulate
 	signal = demodulate(mode, signal)
@@ -27,25 +30,145 @@ const createImage = (buffer, mode, channel, equalize) => {
 	// filter sample
 	signal = filterSamples(signal)
 
-	const normalizedMean = normalizeData(signal)
-	signal = normalizedMean[0]
-	const signalMean = normalizedMean[1]
+	// get normalized
+	signal = getNormalizedSignal(signal)
 
-	// const syncStart = convolveWithSync(0, signal.length, signal, signalMean)
-
-	
+	// generate image
+	if (method === 'sf') {
+		return generateImageSyncFrames(signal, channel)
+	} else if (method === 'cws') {
+		return generateImageConvolveWithSync(signal, channel)
+	}
 }
 
+function generateImageSyncFrames(signal, channel) {
+
+	const pixelStart = getPixelStart(channel)
+	const imageWidth = getImageWidth(channel)
+
+	const downSampler = new dsp.Downsampler(SAMPLE_RATE, FINAL_RATE, getCoeffs())
+
+	const syncFrames = findSync(signal, channel)
+	// for(let i=1; i<syncFrames.length; i++) {
+	// 	console.log(syncFrames[i], syncFrames[i] - syncFrames[i-1])
+	// }
+
+	const lineCount = syncFrames.length
+	const canvas = createCanvas(imageWidth, lineCount)
+	const ctx = canvas.getContext('2d')
+	const image = ctx.createImageData(imageWidth, lineCount)
+
+	for (let line=0; line<syncFrames.length-1; line++) {
+
+		const rowSamples = signal.slice(syncFrames[line], syncFrames[line+1])
+		console.log(rowSamples)
+
+		const thisLineData = downSampler.downsample(rowSamples)
+		
+		for (let column = 0; column < imageWidth; column++) {
+			const value = thisLineData[pixelStart + column] * 255
+			const offset = line * imageWidth * 4 + column * 4
+			image.data[offset] = value // Red
+			image.data[offset + 1] = value // Green
+			image.data[offset + 2] = value // Blue
+			image.data[offset + 3] = 255 // Alpha
+		}
+
+	}
+
+	ctx.putImageData(image, 0, 0)
+
+	return canvas.toBuffer('image/png')	
+
+	// process.exit()
+
+}
+
+function generateImageConvolveWithSync(signal, channel) {
+
+	const downSampler = new dsp.Downsampler(SAMPLE_RATE, FINAL_RATE, getCoeffs())
+
+	const syncStart = 0
+	const signalMean = getNormalizedMean(signal)
+
+	const startingIndex = convolveWithSync(syncStart, SAMPLE_RATE * 2, signal, signalMean).index
+	let lineCount = Math.floor(signal.length / WORDS)
+	lineCount -= Math.floor(syncStart / WORDS)
+	let lineStartIndex = startingIndex
+	
+	const imageWidth = getImageWidth(channel)
+	const pixelStart = getPixelStart(channel)
+
+	const canvas = createCanvas(imageWidth, lineCount)
+	const ctx = canvas.getContext('2d')
+	const image = ctx.createImageData(imageWidth, lineCount)
+	
+	let thisLineData
+	for (let line = 0; line < lineCount; line++) {
+		thisLineData = downSampler.downsample(signal.slice(lineStartIndex + 20, lineStartIndex + WORDS + 20))
+		console.log(thisLineData.length)
+		for (let column = 0; column < imageWidth; column++) {
+			const value = thisLineData[pixelStart + column] * 255
+			const offset = line * imageWidth * 4 + column * 4
+			image.data[offset] = value // Red
+			image.data[offset + 1] = value // Green
+			image.data[offset + 2] = value // Blue
+			image.data[offset + 3] = 255 // Alpha
+		}
+
+		const conv = convolveWithSync(lineStartIndex + WORDS - 40, 80, signal, signalMean)
+		if (conv.score > 5) {
+			lineStartIndex = conv.index
+		} else {
+			lineStartIndex += WORDS
+		}
+	}
+	
+	ctx.putImageData(image, 0, 0)
+
+	return canvas.toBuffer('image/png')	
+
+}
+
+
+function getSyncFrame() {
+	return [-1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+}
+
+function findSync(signal) {
+	const guard = getSyncFrame()
+	const samplesPerWorkRow = WORDS // Using the WORDS constant directly as it fits the description
+	const minDistance = Math.floor(samplesPerWorkRow * 0.8) // 80% of WORDS
+
+	let peaks = []
+	let lastPeak = 0
+
+	for (let i = 0; i <= signal.length - guard.length; i++) {
+		let corr = 0.0
+
+
+		for (let j = 0; j < guard.length; j++) {
+			corr += guard[j] * signal[i + j]
+		}
+
+		// console.log(corr)
+
+		if (corr > 0 && (peaks.length === 0 || i - lastPeak > minDistance)) { // Checks correlation is positive and respects minDistance
+			peaks.push([i, corr])
+			lastPeak = i // update lastPeak to current index
+		}
+	}
+
+	console.info(`Found ${peaks.length} sync frames`)
+	return peaks.map(peak => peak[0])
+}
+
+
 function convolveWithSync(start, range, normalizedData, signalMean) {
-	const sync = [-1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+	const sync = getSyncFrame()
 
 	let maxVal = 0
 	let maxIndex = 0
-
-	const peaks = []
-	let peak = []
-	const minDist = 50
-	let dist = 0
 
 	for (let i = start; i < start + range; i++) {
 		let sum = 0
@@ -54,23 +177,7 @@ function convolveWithSync(start, range, normalizedData, signalMean) {
 				sum += (normalizedData[i + c] - signalMean) * sync[c]				
 			}
 		}
-
-		if (sum > 0) {
-
-			peak.push({ index: i, score: sum })
-
-		} else {
-			
-			if (peak.length > 0) {
-				peaks.push(peak)
-			}
-
-			peak = []
-			// console.log('--------')
-		}
-
 		if (sum > maxVal) {
-
 			maxVal = sum
 			maxIndex = i
 		}
@@ -120,11 +227,15 @@ const getPixelStart = channel => {
 	}
 }
 
+const getCoeffs = () => {
+	const numTaps = 50
+	return dsp.getLowPassFIRCoeffs(SAMPLE_RATE, 1200, numTaps)
+}
+
 const filterSamples = signal => {
 
-	const numTaps = 50
-	const coeffs = dsp.getLowPassFIRCoeffs(SAMPLE_RATE, 1200, numTaps)
-	const filter = new dsp.FIRFilter(coeffs)
+	
+	const filter = new dsp.FIRFilter(getCoeffs())
 
 	const f32samples = new Float32Array(signal.length)
 
@@ -143,6 +254,14 @@ const filterSamples = signal => {
 
 }
 
+
+const getNormalizedSignal = input => {
+	return normalizeData(input).signal
+}
+
+const getNormalizedMean = input => {
+	return normalizeData(input).mean
+}
 
 const normalizeData = input => {
 
@@ -167,7 +286,10 @@ const normalizeData = input => {
 
 	mean = mean / input.length
 
-	return [normalized, mean]
+	return {
+		signal: normalized, 
+		mean: mean,
+	}
 
 }
 
