@@ -13,7 +13,7 @@ const FINAL_RATE = SAMPLE_RATE / 3 //
 
 const createImage = (buffer, mode, channel, method, equalize) => {
 
-	console.log('bessel_i0 test', bessel_i0(2.116625))
+	// console.log('bessel_i0 test', bessel_i0(2.116625))
 
 	// resample
 	const resampled = resampleWav(buffer)
@@ -49,9 +49,6 @@ function generateImageSyncFrames(signal, channel) {
 	const downSampler = new dsp.Downsampler(SAMPLE_RATE, FINAL_RATE, getCoeffs())
 
 	const syncFrames = findSync(signal, channel)
-	// for(let i=1; i<syncFrames.length; i++) {
-	// 	console.log(syncFrames[i], syncFrames[i] - syncFrames[i-1])
-	// }
 
 	const lineCount = syncFrames.length
 	const canvas = createCanvas(imageWidth, lineCount)
@@ -61,7 +58,6 @@ function generateImageSyncFrames(signal, channel) {
 	for (let line=0; line<syncFrames.length-1; line++) {
 
 		const rowSamples = signal.slice(syncFrames[line], syncFrames[line+1])
-		console.log(rowSamples)
 
 		const thisLineData = downSampler.downsample(rowSamples)
 		
@@ -106,7 +102,6 @@ function generateImageConvolveWithSync(signal, channel) {
 	let thisLineData
 	for (let line = 0; line < lineCount; line++) {
 		thisLineData = downSampler.downsample(signal.slice(lineStartIndex + 20, lineStartIndex + WORDS + 20))
-		console.log(thisLineData.length)
 		for (let column = 0; column < imageWidth; column++) {
 			const value = thisLineData[pixelStart + column] * 255
 			const offset = line * imageWidth * 4 + column * 4
@@ -151,15 +146,12 @@ function findSync(signal) {
 			corr += guard[j] * signal[i + j]
 		}
 
-		// console.log(corr)
-
 		if (corr > 0 && (peaks.length === 0 || i - lastPeak > minDistance)) { // Checks correlation is positive and respects minDistance
 			peaks.push([i, corr])
 			lastPeak = i // update lastPeak to current index
 		}
 	}
 
-	console.info(`Found ${peaks.length} sync frames`)
 	return peaks.map(peak => peak[0])
 }
 
