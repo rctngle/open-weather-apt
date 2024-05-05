@@ -157,8 +157,13 @@ function Downsampler(inRate, outRate, coefficients) {
   function downsample(samples) {
     filter.loadSamples(samples);
     var outArr = new Float32Array(Math.floor(samples.length / rateMul));
+    /*
     for (var i = 0, readFrom = 0; i < outArr.length; ++i, readFrom += rateMul) {
       outArr[i] = filter.get(Math.floor(readFrom));
+    }
+    */
+    for (var idx = 0; idx < outArr.length; idx++) {
+      outArr[idx] = samples[idx * rateMul];
     }
     return outArr;
   }
