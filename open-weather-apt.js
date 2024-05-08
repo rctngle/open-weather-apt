@@ -1,5 +1,5 @@
-const fs = require('fs')
-const { create_image } = require('./image')
+import fs from 'fs'
+import { create_image } from './image.js'
 
 const audioPath = process.argv[2]
 const imagePath = process.argv[3] || 'output.png'

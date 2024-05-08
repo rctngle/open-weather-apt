@@ -1,31 +1,31 @@
-const wav = require('node-wav')
+import wav from 'node-wav'
 
-const { 
+import { 
 	PX_PER_ROW, 
 	FIL_SAMPLE_RATE, 
 	FINAL_RATE, 
 	CUTOFF_FREQ, 
 	HIGH_PASS_CUTOFF,
 	DEMODULATION_ATTEN,
-} = require('./constants')
+} from './constants.js'
 
-const {
+import {
 	Freq,
 	Rate,
-} = require('./freqrate')
+} from './freqrate.js'
 
-const { 
+import { 
 	Lowpass, 
 	LowpassDcRemoval, 
 	resample_with_filter, 
 	dsp_filter,
-} = require('./filters')
+} from './filters.js'
 
-const { 
+import { 
 	demodulate,
-} = require('./demodulate')
+} from './demodulate.js'
 
-const decode =(buffer, mode) => {
+export const decode =(buffer, mode) => {
 
 	const result = wav.decode(buffer)
 	//result.channelData[0] result.sampleRate 	
@@ -218,8 +218,4 @@ const find_sync = (signal, work_rate, final_rate, PX_PER_ROW) => {
 const ar_last = arry => {
 	const temp = arry[arry.length - 1]
 	return temp
-}
-
-module.exports = {
-	decode,
 }

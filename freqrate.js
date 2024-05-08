@@ -1,4 +1,4 @@
-class Freq {
+export class Freq {
 	
 	constructor(pi_rad) {
 		// expects fractional pi_rad
@@ -39,7 +39,7 @@ class Freq {
 	}
 }
 
-class Rate {
+export class Rate {
 	constructor(freq) {
 		this.freq = freq
 	}
@@ -47,9 +47,4 @@ class Rate {
 	get_hz() {
 		return this.freq
 	}
-}
-
-module.exports = {
-	Freq,
-	Rate,
 }

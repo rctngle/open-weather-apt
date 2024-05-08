@@ -1,6 +1,6 @@
-const FFT = require('fft.js')
+import FFT from 'fft.js'
 
-const demodulate = (signal, mode) => {
+export const demodulate = (signal, mode) => {
 
 	if (mode === 'abs') {
 		return demod_abs(signal)
@@ -144,8 +144,4 @@ const hilbert_fft = data => {
 	f.inverseTransform(cpxData, out)
 	return cpxData
 
-}
-
-module.exports = {
-	demodulate,
 }

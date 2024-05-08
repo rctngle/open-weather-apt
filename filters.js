@@ -19,11 +19,12 @@
  *
  */
 
-const {
-	Rate,
-} = require('./freqrate')
 
-function resample_with_filter(signal, input_rate, output_rate, filt) {
+import {
+	Rate,
+} from './freqrate.js'
+
+export function resample_with_filter(signal, input_rate, output_rate, filt) {
 
 	if (output_rate.get_hz() == 0) {
 		console.log('resample_with_filter Cant resample to 0Hz')
@@ -241,7 +242,7 @@ function gcd(a, b) {
  * goes from `0` to `delta_w`.
  */
 
-class LowpassDcRemoval {
+export class LowpassDcRemoval {
 	constructor (cutout, atten, delta_w) {
 		this.cutout = cutout
 		this.atten = atten
@@ -293,7 +294,7 @@ class LowpassDcRemoval {
 	}
 }
 
-class Lowpass {
+export class Lowpass {
 	constructor (cutout, atten, delta_w) {
 		this.cutout = cutout
 		this.atten = atten
@@ -449,7 +450,7 @@ function bessel_i0(x) {
 }
 
 /// Filter a signal.
-function dsp_filter(signal, filter) {
+export function dsp_filter(signal, filter) {
 	const coeff = filter.design()
 	//let coeff_sub = coeff.slice(0, 50);
 	console.log('lp post demod coeff values')
@@ -477,9 +478,3 @@ function dsp_filter(signal, filter) {
 	return output
 }
 
-module.exports = {
-	LowpassDcRemoval,
-	Lowpass,
-	resample_with_filter,
-	dsp_filter,
-}

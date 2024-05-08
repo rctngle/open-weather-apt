@@ -1,17 +1,14 @@
-const { createCanvas } = require('canvas')
-const { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } = require('./constants')
-const { decode } = require('./decode')
-const dsp = require('./dsp')
+import { createCanvas } from 'canvas'
+import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants.js'
+import { decode } from './decode.js'
+import { equalizeHistogram } from './equalize.js'
 
-const create_image = (buffer, mode, channel, equalize) => {
+export const create_image = (buffer, mode, channel, equalize) => {
 
 	const [ sync_positions, signal ] = decode(buffer, mode)
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
-
-
-	const downSampler = new dsp.Downsampler(SAMPLE_RATE, FINAL_RATE, get_coeffs())
 
 	const lineCount = sync_positions.length
 	const canvas = createCanvas(image_width, lineCount)
@@ -31,10 +28,10 @@ const create_image = (buffer, mode, channel, equalize) => {
 	for (let line=0; line<sync_positions.length-1; line++) {
 		
 		const row_samples = signal.slice(sync_positions[line][0], sync_positions[line+1][0])
-		const this_line_data = downSampler.downsample(row_samples)
+		const this_line_data = downsample(row_samples, SAMPLE_RATE, FINAL_RATE)
+
 		//let low = Math.min(this_line_data);
 		//let high = Math.max(this_line_data);
-
 
 		let this_line = map_signal_u8(this_line_data, low, high)
 		//console.log(row_samples)
@@ -62,10 +59,26 @@ const create_image = (buffer, mode, channel, equalize) => {
 
 	}
 
+	if (equalize) {
+		equalizeHistogram(image)
+		// equalizeHistogramB(image)
+	}
+
 	ctx.putImageData(image, 0, 0)
 
 	return canvas.toBuffer('image/png')	
 
+}
+
+const downsample = (samples, input_rate, output_rate) => {
+
+	const rate_mull = input_rate / output_rate
+	const arr = new Float32Array(Math.floor(samples.length / rate_mull))
+
+	for (var idx = 0; idx < arr.length; idx++) {
+		arr[idx] = samples[idx * rate_mull]
+	}
+	return arr
 }
 
 const map_signal_u8 = (signal, low, high) => {
@@ -84,10 +97,6 @@ const map_signal_u8 = (signal, low, high) => {
 	return raw_data
 }
 
-const get_coeffs = () => {
-	const numTaps = 50
-	return dsp.getLowPassFIRCoeffs(SAMPLE_RATE, 1200, numTaps)
-}
 
 const get_image_width = channel => {
 	if (channel === 'A') {
@@ -109,9 +118,6 @@ const get_pixel_start = channel => {
 	}
 }
 
-module.exports = {
-	create_image,
-}
 
 /*
  * Returns lowest and highest values that fall inside the percent given.
