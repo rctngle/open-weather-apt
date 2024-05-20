@@ -3,18 +3,25 @@ import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants
 import { decode } from './decode.js'
 import { equalizeHistogram } from './equalize.js'
 
-export const create_image = (buffer, sync, mode, channel, equalize) => {
+export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
 	const [ sync_positions, signal ] = decode(buffer, mode)
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
 
-	const lineCount = sync_positions.length
-	const canvas = createCanvas(image_width, lineCount)
+	const line_count = sync_positions.length
+
+	if (canvas) {
+		canvas.width = image_width
+		canvas.height = line_count
+	} else {
+		canvas = createCanvas(image_width, line_count)	
+	}
+	
 	const ctx = canvas.getContext('2d')
 	
-	const image = ctx.createImageData(image_width, lineCount)
+	const image = ctx.createImageData(image_width, line_count)
 
 	const [low, high] = percent(signal, 0.98)	
 
