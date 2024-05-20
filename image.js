@@ -5,15 +5,19 @@ import { equalizeHistogram } from './equalize.js'
 
 let decoded
 let last_mode
+let last_buffer
 
 export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-
-	if (buffer || mode !== last_mode) {
+	if (buffer) {
+		last_buffer = buffer
 		decoded = decode(buffer, mode)
 	}
 
-	last_mode = mode
+	if (mode !== last_mode) {
+		last_mode = mode
+		decoded = decode(last_buffer, mode)
+	}
 
 	const [ sync_positions, signal ] = decoded
 
