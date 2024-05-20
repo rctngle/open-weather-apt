@@ -4,12 +4,16 @@ import { decode } from './decode.js'
 import { equalizeHistogram } from './equalize.js'
 
 let decoded
+let last_mode
 
 export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-	if (buffer) {
+
+	if (buffer || mode !== last_mode) {
 		decoded = decode(buffer, mode)
 	}
+
+	last_mode = mode
 
 	const [ sync_positions, signal ] = decoded
 
