@@ -1,4 +1,4 @@
-import FFT from 'fft.js'
+import FFT from './fft.js'
 
 export const demodulate = (signal, mode) => {
 
@@ -58,7 +58,6 @@ const demod_hilbert_fft = input => {
 }
 
 const pad_array_fft = data => {
-
 	const new_data = [...data]
 	const new_length = nearest_upper_pow_2(new_data.length)
 	const diff = new_length - new_data.length
