@@ -3,9 +3,15 @@ import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants
 import { decode } from './decode.js'
 import { equalizeHistogram } from './equalize.js'
 
+let decoded
+
 export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-	const [ sync_positions, signal ] = decode(buffer, mode)
+	if (buffer) {
+		decoded = decode(buffer, mode)
+	}
+
+	const [ sync_positions, signal ] = decoded
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
