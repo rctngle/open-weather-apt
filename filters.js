@@ -27,13 +27,10 @@ import {
 export function resample_with_filter(signal, input_rate, output_rate, filt) {
 
 	if (output_rate.get_hz() == 0) {
-		console.log('resample_with_filter Cant resample to 0Hz')
-		throw new Error()
+		throw new Error('resample_with_filter Cant resample to 0Hz')
 	}
-	console.log(' resample with filter in %d out %d ', input_rate.get_hz(), output_rate.get_hz())
 	
 	const gcdv = gcd(input_rate.get_hz(), output_rate.get_hz())
-	console.log('gcd value %d', gcdv)
 	
 	// Note I use L and M instead of lowercase l and m as in NOAA-APT
 	// The reason is the lowercase l looks to similar to the number 1.
@@ -46,7 +43,6 @@ export function resample_with_filter(signal, input_rate, output_rate, filt) {
 		// If we need interpolation
 		// Reference the frequencies to the rate we have after interpolation
 		const interpolated_rate = new Rate(L * input_rate.get_hz())
-		console.log(' interpolated_rate %d L %d M %d', interpolated_rate.get_hz(), L, M)
 
 		filt.resample(input_rate, interpolated_rate)
 		const coeff = filt.design()
@@ -90,22 +86,16 @@ export function resample_with_filter(signal, input_rate, output_rate, filt) {
 function fast_resampling( signal, L, M, coeff, input_rate) {
 
 	// Check the diagram on the documentation to see what the letters mean
-
 	// Length that the interpolated signal should have, as u64 because this can
 	// easily overflow if usize is 32 bits long
-	console.log('in fast resampling')
 	const interpolated_len = signal.length * L
 
 	// Length of the output signal, this should fit in 32 bits anyway.
 	const output_len = Math.floor(interpolated_len / M)
 
 	const output = new Array(output_len)
-	console.log('input_rate %d l %d m %d', input_rate.get_hz(), L, M)
-	console.log('interpolated_len %d signal len %d output len %d', interpolated_len, signal.length, output_len)
-
+	
 	// Save expanded and filtered signal if we need to export that step
-	const expanded_filtered = new Array(L)
-	console.log('expanded_filtered len %d', expanded_filtered.length)
 	// note that context.export_resample_filtering is false
 	/*
 	let mut expanded_filtered = if context.export_resample_filtered {
@@ -128,8 +118,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 	let n // Current working n
 
 	let t = offset // Like n but fixed to the current output
-	// sample to calculate
-	console.log('while begin offset %d t %d ', offset, t)
 	
 	// Iterate over each output sample
 	let idx = 0
@@ -164,7 +152,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 			if (x < signal.length) {
 				sum += coeff[n + offset -t] * signal[x]
 				/*
-				console.log('frs while x %d n %d t %d offset %d coeff %f sample %f', x, n, t, offset, coeff[n + offset - t], signal[x]);
 				if(cnt > 20) {throw new Error('Something went badly wrong!');}
 				cnt += 1;
 				*/
@@ -195,7 +182,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 		*/
 		// Iterate over the samples that would survive a decimation.
 		output[idx] = sum
-		//console.log('fsr idx %d sum %f', idx, sum);
 		idx += 1
 		/*
 		cnt += 1;
@@ -204,7 +190,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 		t += M // Jump to next output sample
 
 	}
-	//console.log(output);
 	return output
 }
 
@@ -249,15 +234,12 @@ export class LowpassDcRemoval {
 		this.delta_w = delta_w
 	}
 
-	//Filter for LowpassDcRemoval
+	// Filter for LowpassDcRemoval
 	design() {
-		console.log('cutout %f atten %f delta_w %f ', this.cutout.get_pi_rad(), this.atten,  this.delta_w.get_pi_rad())
-	
 		const win = kaiser(this.atten, this.delta_w)
 	
 		if (win.length % 2 == 0) {
-			console.log('Kaiser win length should be odd')
-			throw new Error()
+			throw new Error('Kaiser win length should be odd')
 		}
 	
 		const filter = new Array(Math.floor(win.length))
@@ -279,18 +261,13 @@ export class LowpassDcRemoval {
 			idx++
 		}
 	
-		//console.log(filter)
 		return product(filter, win)
 	}
 
 	resample(input_rate, output_rate) {
 		const ratio = output_rate.get_hz()  / input_rate.get_hz()
-		console.log('resample output %d input %d ', output_rate.get_hz(),input_rate.get_hz())
-		console.log('ratio %f', ratio)
-		console.log(' old cutout %f delta_w %f', this.cutout.get_pi_rad(), this.delta_w.get_pi_rad())
 		this.cutout.set_pi_rad(this.cutout.get_pi_rad() / ratio)
 		this.delta_w.set_pi_rad(this.delta_w.get_pi_rad() / ratio)
-		console.log(' new cutout %f delta_w %f', this.cutout.get_pi_rad(), this.delta_w.get_pi_rad())
 	}
 }
 
@@ -301,15 +278,13 @@ export class Lowpass {
 		this.delta_w = delta_w
 	}
 
-	//Filter for Lowpass  
+	// Filter for Lowpass  
 	design() { 
-		console.log('in lp design cutout.get_pi_rad %f atten %f delta_w.get_pi_rad %f', this.cutout.get_pi_rad(), this.atten, this.delta_w.get_pi_rad())
 		
 		const win = kaiser(this.atten, this.delta_w)
 
 		if (win.length % 2 == 0) {
-			console.log('Kaiser window length should be odd')
-			throw new Error()
+			throw new Error('Kaiser window length should be odd')
 		}
 
 		const filter = new Array(win.length)
@@ -325,18 +300,8 @@ export class Lowpass {
 			idx += 1
 		}
 		
-		console.log('low pass filter')
-		console.log(filter)
-
-		console.log('low pass window')
-		console.log(win)
-
-		console.log('low pass product')
-		console.log(product(filter, win))
 		
 		const rtn_pro = product(filter,win)
-		console.log('rtn_pro in lp design')
-		console.log(rtn_pro)
 		return rtn_pro
 	}
 }
@@ -347,8 +312,7 @@ export class Lowpass {
 // Product of two vectors, element by element.
 function product(v1, v2)  {
 	if (v1.length != v2.length) {
-		console.log('in product Both vectors must have the same length')
-		throw new Error()
+		throw new Error('in product Both vectors must have the same length')
 	}
 
 	for (let i = 0; i < v1.length; i++) {
@@ -452,29 +416,23 @@ function bessel_i0(x) {
 /// Filter a signal.
 export function dsp_filter(signal, filter) {
 	const coeff = filter.design()
-	//let coeff_sub = coeff.slice(0, 50);
-	console.log('lp post demod coeff values')
-	console.log(coeff)
-	
 	const output = new Array(signal.length)
 	
-	console.log('inside dsp_filter')
-	console.log('signal length %d coeff length %d', signal.length, coeff.length)
-
 	for (let i = 0; i < signal.length; i++) {
 		let  sum = 0.0
 		for (let j = 0; j < coeff.length; j++) {
 			if (i > j) {
 				sum += signal[i - j] * coeff[j]
+				/*
 				if ( i == 38) {
 					console.log('j %d signal[i-j] %f coeff[j] %f sum %f', j, signal[i-j],coeff[j], sum)
 				}
+				*/
 			}
 		}
 		output[i] = sum
 	}
 	
-	console.log('leaving dsp_filter')
 	return output
 }
 

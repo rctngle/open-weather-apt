@@ -34,7 +34,6 @@ export class Freq {
 
 	// get frequency in Hertz
 	get_hz(rate) {
-		console.log(this.pi_rad * rate.get_hz() / 2)
 		return this.pi_rad * rate.get_hz() / 2
 	}
 }

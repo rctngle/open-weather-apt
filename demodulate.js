@@ -25,38 +25,25 @@ const demod_cos = input => {
 	const data = []
 	let cnt = 0
 
-	// console.log(" x " + input.dataSamples.length);
-	// console.log(" x " + input.length);
 	// 2400 is the frequency of the carrier
 	const smp_rate = 6240
 
 	// const trig_arg = Math.PI * 2 * 2400.0 / 11025;
 	const trig_arg = Math.PI * 2 * 2400.0 / smp_rate
-	// console.log("in demod smp_rate %f ratio %f", smp_rate, 2400.0 / smp_rate)
 
 	const cos2 = 2.0 * Math.cos(trig_arg)
 	const sin_rg = Math.sin(trig_arg)
-	// console.log(" trig_arg %f sin %f cos %f", trig_arg, Math.sin(trig_arg), Math.cos(trig_arg) )
-	
-	/*
-	for (let c = 1; c < input.dataSamples.length; c++) {
-		const temp = Math.sqrt(Math.pow(input.dataSamples[c - 1], 2) + Math.pow(input.dataSamples[c], 2) - input.dataSamples[c - 1] * input.dataSamples[c] * cos2);
-		data[c] = temp / sin_rg;
-	}
-	*/
 	
 	for (let c = 1; c < input.length; c++) {
 		
 		const temp = Math.sqrt(Math.pow(input[c - 1], 2) + Math.pow(input[c], 2) - input[c - 1] * input[c] * cos2)
 		data[c] = temp / sin_rg
 		if (cnt < 25 ) {
-			// console.log("demod c %d input[c-1] %f input[c] %f data[c] %f", c, input[c - 1], input[c], data[c]);
 			cnt += 1
 		}
 	}
 	
 	//data[0] = data[1]; // as in open-weather
-
 	data[0] = 0 // as in noaa-apt
 
 	return data
