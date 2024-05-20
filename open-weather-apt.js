@@ -12,7 +12,7 @@ const equalize = (process.argv[7] && process.argv[7] === '0') ? false : true
 const buffer = fs.readFileSync(audioPath)
 
 // create image
-const outputBuffer = create_image(buffer, sync, mode, channel, equalize)
+const canvas = create_image(buffer, sync, mode, channel, equalize)
 
 // write the png
-fs.writeFileSync(imagePath, outputBuffer)
+fs.writeFileSync(imagePath, canvas.toBuffer('image/png'))
