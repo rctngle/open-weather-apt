@@ -3,7 +3,7 @@ import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants
 import { decode } from './decode.js'
 import { equalizeHistogram } from './equalize.js'
 
-export const create_image = (buffer, mode, channel, equalize) => {
+export const create_image = (buffer, sync, mode, channel, equalize) => {
 
 	const [ sync_positions, signal ] = decode(buffer, mode)
 
@@ -18,11 +18,28 @@ export const create_image = (buffer, mode, channel, equalize) => {
 
 	const [low, high] = percent(signal, 0.98)	
 
-	for (let line=0; line<sync_positions.length-1; line++) {
+	const lines = []
+	if (sync) {
+		// to produce a synced image, get lines by sync position
+		for (let line = 0; line < sync_positions.length-1; line++) {
+			const row_samples = signal.slice(sync_positions[line][0], sync_positions[line+1][0])
+			lines.push(row_samples)
+		}	
+	} else {
+		// to produce an unsynced image, start a new line every 6240 samples
+		const samples_per_line = (SAMPLE_RATE / 2)
+		const num_lines = Math.floor(signal.length / samples_per_line)
+		for (let line = 0; line < num_lines; line++) {
+			const row_samples = signal.slice(line * samples_per_line, line * samples_per_line + samples_per_line)
+			lines.push(row_samples)
+		}
+	}
 
-		const row_samples = signal.slice(sync_positions[line][0], sync_positions[line+1][0])
+
+	for (let line = 0; line < lines.length; line++) {
+
+		const row_samples = lines[line]
 		const this_line_data = downsample(row_samples, SAMPLE_RATE, FINAL_RATE)
-
 		let this_line = map_signal_u8(this_line_data, low, high)
 
 		for (let column = 0; column < image_width; column++) {
@@ -33,12 +50,11 @@ export const create_image = (buffer, mode, channel, equalize) => {
 			image.data[offset + 2] = value // Blue
 			image.data[offset + 3] = 255 // Alpha
 		}
-
 	}
 
+
 	if (equalize) {
-		equalizeHistogram(image)
-		// equalizeHistogramB(image)
+		equalizeHistogram(image, channel)
 	}
 
 	ctx.putImageData(image, 0, 0)
