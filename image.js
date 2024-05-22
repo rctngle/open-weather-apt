@@ -12,9 +12,7 @@ export const create_image = (buffer, sync, mode, channel, equalize, canvas = nul
 	if (buffer) {
 		last_buffer = buffer
 		decoded = decode(buffer, mode)
-	}
-
-	if (mode !== last_mode) {
+	} else if (mode !== last_mode) {
 		last_mode = mode
 		decoded = decode(last_buffer, mode)
 	}
