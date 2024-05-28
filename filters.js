@@ -190,11 +190,14 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 		t += M // Jump to next output sample
 
 	}
+
+	output.length = idx;
+
 	return output
 }
 
 
-// Decimate withoug filtering
+// Decimate without filtering
 // The signal should be accordingly bandlimited previously to avoid aliasing
 /*
 function decimate(signal, M) {
