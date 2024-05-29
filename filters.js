@@ -90,10 +90,7 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 	// easily overflow if usize is 32 bits long
 	const interpolated_len = signal.length * L
 
-	// Length of the output signal, this should fit in 32 bits anyway.
-	const output_len = Math.floor(interpolated_len / M)
-
-	const output = new Array(output_len)
+	const output = []
 	
 	// Save expanded and filtered signal if we need to export that step
 	// note that context.export_resample_filtering is false
@@ -120,7 +117,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 	let t = offset // Like n but fixed to the current output
 	
 	// Iterate over each output sample
-	let idx = 0
 	while (t < interpolated_len) {
 		// Find first n inside the window that has a input sample that I
 		// should multiply with a filter coefficient
@@ -160,29 +156,9 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 			x += 1
 			n += L
 		}
-
-		// note that context.export_resample_filtering is false
-		/*
-		if context.export_resample_filtered {
-			// Iterate over every sample on the n axis, inefficient because we
-			// only need to push to `output` the samples that would survive
-			// a decimation.
-			expanded_filtered[idx_ef] = sum;
-			t += 1;
-			if t % m == 0 {
-				output[idx] = sum;
-				idx += 1;
-			}
-		} else {
-			// Iterate over the samples that would survive a decimation.
-			output[idx] = sum;
-			idx += 1;
-			t += m; // Jump to next output sample
-		}
-		*/
+		
 		// Iterate over the samples that would survive a decimation.
-		output[idx] = sum
-		idx += 1
+		output.push(sum)
 		/*
 		cnt += 1;
 		if (cnt > 20) {throw new Error('Something went badly wrong!');}
@@ -190,8 +166,6 @@ function fast_resampling( signal, L, M, coeff, input_rate) {
 		t += M // Jump to next output sample
 
 	}
-
-	output.length = idx;
 
 	return output
 }
