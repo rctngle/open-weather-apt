@@ -78,7 +78,10 @@ export const create_image = (buffer, sync, mode, channel, equalize, canvas = nul
 
 	ctx.putImageData(image, 0, 0)
 
-	return canvas
+	return {
+		canvas,
+		sync_positions,
+	}
 
 }
 
