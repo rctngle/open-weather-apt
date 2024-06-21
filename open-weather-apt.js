@@ -17,5 +17,8 @@ const result = create_image(buffer, sync, mode, channel, equalize)
 // print sync positions
 console.log('Sync Positions', JSON.stringify(result.sync_positions))
 
+// print signal histogram
+console.log('Signal Histogram', JSON.stringify(result.signal_histogram))
+
 // write the png
 fs.writeFileSync(imagePath, result.canvas.toBuffer('image/png'))

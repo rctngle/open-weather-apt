@@ -78,11 +78,40 @@ export const create_image = (buffer, sync, mode, channel, equalize, canvas = nul
 
 	ctx.putImageData(image, 0, 0)
 
+
+	const signal_histogram = generate_histogram(signal)
+
 	return {
 		canvas,
 		sync_positions,
+		signal_histogram,
 	}
 
+}
+
+function generate_histogram(signal, num_bins = 1000) {
+	const smin = get_min(signal)
+	const smax = get_max(signal)
+	const bin_width = (smax - smin) / num_bins
+	let bins = new Array(num_bins).fill(0)
+
+	signal.forEach(value => {
+		const binIndex = Math.floor((value - smin) / bin_width)
+		if (binIndex < num_bins) {
+			bins[binIndex]++
+		}
+	})
+
+	return bins
+	
+	// return bins.map((count, index) => {
+	// 	const bin_sart = smin + index * bin_width
+	// 	const bin_end = bin_sart + bin_width
+	// 	return {
+	// 		range: `[${bin_sart.toFixed(2)}, ${bin_end.toFixed(2)})`,
+	// 		count: count
+	// 	}
+	// })
 }
 
 const downsample = (samples, input_rate, output_rate) => {
