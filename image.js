@@ -102,16 +102,19 @@ function generate_histogram(signal, num_bins = 1000) {
 		}
 	})
 
-	return bins
+	return {
+		bin_width: bin_width,
+		bins: bins.map((count, index) => {
+			const bin_start = smin + index * bin_width
+			const bin_end = bin_start + bin_width
+			return {
+				min: bin_start,
+				max: bin_end,
+				count: count
+			}
+		})
+	}
 	
-	// return bins.map((count, index) => {
-	// 	const bin_sart = smin + index * bin_width
-	// 	const bin_end = bin_sart + bin_width
-	// 	return {
-	// 		range: `[${bin_sart.toFixed(2)}, ${bin_end.toFixed(2)})`,
-	// 		count: count
-	// 	}
-	// })
 }
 
 const downsample = (samples, input_rate, output_rate) => {
