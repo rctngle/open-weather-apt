@@ -25,7 +25,7 @@ import {
 	demodulate,
 } from './demodulate.js'
 
-export const decode =(buffer, mode) => {
+export const decode = buffer => {
 
 	const result = wav.decode(buffer)
 	const data = result.channelData[0]
@@ -65,6 +65,12 @@ export const decode =(buffer, mode) => {
 		throw new Error('Got less than 10 rows of samples, audio file is too short')
 	}
 
+	return signal
+
+}
+
+export const demod_filter = (signal, mode) => {
+
 	/*
 	let spec_pred = hound::WavSpec {
 		channels: 1,
@@ -82,6 +88,8 @@ export const decode =(buffer, mode) => {
 	signal_file.write(signal_str.as_bytes()).expect("write file");
 	*/
 	
+	const work_rate = new Rate(FIL_SAMPLE_RATE)
+
 	const demod_sig = demodulate(signal, mode)
 
 	const cutout_lp = Freq.pi_rad(FINAL_RATE / work_rate.get_hz())
@@ -94,10 +102,7 @@ export const decode =(buffer, mode) => {
 	const filter_lp = new Lowpass (cutout_lp, DEMODULATION_ATTEN, delta_w_lp)
 	signal = dsp_filter(demod_sig, filter_lp)
 
-	// Filter a signal.
-	const sync_pos = find_sync(signal, work_rate, FINAL_RATE, PX_PER_ROW )
-
-	return [ sync_pos, signal ]
+	return signal
 }
 
 const generate_sync_frame = (work_rate, FINAL_Rate) => {
@@ -128,7 +133,11 @@ const generate_sync_frame = (work_rate, FINAL_Rate) => {
 // Find sync frame positions.
 //
 // Returns list of found sync frames positions.
-const find_sync = (signal, work_rate, final_rate, PX_PER_ROW) => {
+export const find_sync = signal => {
+
+	// work_rate, final_rate, PX_PER_ROW
+
+	const work_rate = new Rate(FIL_SAMPLE_RATE)
 
 	const guard = generate_sync_frame(work_rate, FINAL_RATE)
 

@@ -1,23 +1,10 @@
 import { createCanvas } from 'canvas'
 import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants.js'
-import { decode } from './decode.js'
 import { equalizeHistogram } from './equalize.js'
 
-let decoded
-let last_mode
-let last_buffer
+// export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
-
-	if (buffer) {
-		last_buffer = buffer
-		decoded = decode(buffer, mode)
-	} else if (mode !== last_mode) {
-		last_mode = mode
-		decoded = decode(last_buffer, mode)
-	}
-
-	const [ sync_positions, signal ] = decoded
+export const create_image = (signal, sync_positions, sync, channel, equalize, canvas = null) => {
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)

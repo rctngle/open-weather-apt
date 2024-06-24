@@ -1,4 +1,5 @@
 import fs from 'fs'
+import { decode, demod_filter, find_sync } from './decode.js'
 import { create_image } from './image.js'
 
 const audioPath = process.argv[2]
@@ -11,8 +12,17 @@ const equalize = (process.argv[7] && process.argv[7] === '0') ? false : true
 // read the wav
 const buffer = fs.readFileSync(audioPath)
 
+// decode and resample
+let signal = decode(buffer)
+
+// demodulate
+signal = demod_filter(signal, mode)
+
+// find the sync positions
+const sync_positions = find_sync(signal)
+
 // create image
-const result = create_image(buffer, sync, mode, channel, equalize)
+const result = create_image(signal, sync_positions, sync, channel, equalize)
 
 // print sync positions
 console.log('Sync Positions', JSON.stringify(result.sync_positions))
