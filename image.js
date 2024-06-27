@@ -9,23 +9,13 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
 
-	const line_count = sync_positions.length
-
-	if (canvas) {
-		canvas.width = image_width
-		canvas.height = line_count
-	} else {
-		canvas = createCanvas(image_width, line_count)	
-	}
-	
-	const ctx = canvas.getContext('2d')
-	
-	const image = ctx.createImageData(image_width, line_count)
-
 	const [low, high] = percent(signal, 0.98)	
 
 	const lines = []
+	let num_lines = 0
+
 	if (sync) {
+		num_lines = sync_positions.length
 		// to produce a synced image, get lines by sync position
 		for (let line = 0; line < sync_positions.length-1; line++) {
 			const row_samples = signal.slice(sync_positions[line][0], sync_positions[line+1][0])
@@ -34,12 +24,24 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 	} else {
 		// to produce an unsynced image, start a new line every 6240 samples
 		const samples_per_line = (SAMPLE_RATE / 2)
-		const num_lines = Math.floor(signal.length / samples_per_line)
+		num_lines = Math.floor(signal.length / samples_per_line)
 		for (let line = 0; line < num_lines; line++) {
 			const row_samples = signal.slice(line * samples_per_line, line * samples_per_line + samples_per_line)
 			lines.push(row_samples)
 		}
 	}
+
+	if (canvas) {
+		canvas.width = image_width
+		canvas.height = num_lines
+	} else {
+		canvas = createCanvas(image_width, num_lines)	
+	}
+	
+	const ctx = canvas.getContext('2d')
+	
+	const image = ctx.createImageData(image_width, num_lines)
+
 
 	const pixels = []
 	for (let line = 0; line < lines.length; line++) {
