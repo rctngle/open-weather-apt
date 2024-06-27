@@ -69,18 +69,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 
 	ctx.putImageData(image, 0, 0)
 
-
-	const signal_histogram = generate_histogram(signal, 1000)
-	const image_histogram = generate_histogram(pixels, 255)
-
 	return canvas
-	// return {
-	// 	canvas,
-	// 	sync_positions,
-	// 	signal_histogram,
-	// 	image_histogram,
-	// }
-
 }
 
 export function generate_image_histogram(canvas) {
