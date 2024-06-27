@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { decode, demod_filter, find_sync } from './decode.js'
-import { create_image } from './image.js'
+import { create_image, generate_histogram, generate_image_histogram } from './image.js'
 
 const audioPath = process.argv[2]
 const imagePath = process.argv[3] || 'output.png'
@@ -22,16 +22,22 @@ signal = demod_filter(signal, mode)
 const sync_positions = find_sync(signal)
 
 // create image
-const result = create_image(signal, sync_positions, sync, channel, equalize)
+const canvas = create_image(signal, sync_positions, sync, channel, equalize)
+
+// generate signal histogram
+const signal_histogram = generate_histogram(signal, 1000)
+
+// generate image histogram
+const image_histogram = generate_image_histogram(canvas)
 
 // print sync positions
-console.log('Sync Positions', JSON.stringify(result.sync_positions))
+console.log('Sync Positions', JSON.stringify(sync_positions))
 
 // print signal histogram
-console.log('Signal Histogram', JSON.stringify(result.signal_histogram))
+console.log('Signal Histogram', JSON.stringify(signal_histogram))
 
 // print image histogram
-console.log('Image Histogram', JSON.stringify(result.image_histogram))
+console.log('Image Histogram', JSON.stringify(image_histogram))
 
 // write the png
-fs.writeFileSync(imagePath, result.canvas.toBuffer('image/png'))
+fs.writeFileSync(imagePath, canvas.toBuffer('image/png'))

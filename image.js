@@ -73,16 +73,32 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 	const signal_histogram = generate_histogram(signal, 1000)
 	const image_histogram = generate_histogram(pixels, 255)
 
-	return {
-		canvas,
-		sync_positions,
-		signal_histogram,
-		image_histogram,
-	}
+	return canvas
+	// return {
+	// 	canvas,
+	// 	sync_positions,
+	// 	signal_histogram,
+	// 	image_histogram,
+	// }
 
 }
 
-function generate_histogram(signal, num_bins) {
+export function generate_image_histogram(canvas) {
+
+	const ctx = canvas.getContext('2d')
+	const image_data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+	const data = image_data.data
+	const values = []
+
+	for (let i = 0; i < data.length; i += 4) {
+		let grayscale = data[i]
+		values.push(grayscale)
+	}
+
+	return generate_histogram(values, 255)
+}
+
+export function generate_histogram(signal, num_bins) {
 	const smin = get_min(signal)
 	const smax = get_max(signal)
 	const bin_width = (smax - smin) / num_bins
