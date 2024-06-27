@@ -87,7 +87,7 @@ export function generate_image_histogram(canvas) {
 	return generate_histogram(values, 255)
 }
 
-export function generate_histogram(signal, num_bins) {
+export function generate_histogram(signal, num_bins = 1000) {
 	const smin = get_min(signal)
 	const smax = get_max(signal)
 	const bin_width = (smax - smin) / num_bins
