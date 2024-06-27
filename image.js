@@ -41,7 +41,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 		}
 	}
 
-
+	const pixels = []
 	for (let line = 0; line < lines.length; line++) {
 
 		const row_samples = lines[line]
@@ -55,6 +55,8 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 			image.data[offset + 1] = value // Green
 			image.data[offset + 2] = value // Blue
 			image.data[offset + 3] = 255 // Alpha
+
+			pixels.push(value)
 		}
 	}
 
@@ -66,17 +68,19 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 	ctx.putImageData(image, 0, 0)
 
 
-	const signal_histogram = generate_histogram(signal)
+	const signal_histogram = generate_histogram(signal, 1000)
+	const image_histogram = generate_histogram(pixels, 255)
 
 	return {
 		canvas,
 		sync_positions,
 		signal_histogram,
+		image_histogram,
 	}
 
 }
 
-function generate_histogram(signal, num_bins = 1000) {
+function generate_histogram(signal, num_bins) {
 	const smin = get_min(signal)
 	const smax = get_max(signal)
 	const bin_width = (smax - smin) / num_bins

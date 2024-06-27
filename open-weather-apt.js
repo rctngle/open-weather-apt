@@ -30,5 +30,8 @@ console.log('Sync Positions', JSON.stringify(result.sync_positions))
 // print signal histogram
 console.log('Signal Histogram', JSON.stringify(result.signal_histogram))
 
+// print image histogram
+console.log('Image Histogram', JSON.stringify(result.image_histogram))
+
 // write the png
 fs.writeFileSync(imagePath, result.canvas.toBuffer('image/png'))
