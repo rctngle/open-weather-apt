@@ -67,7 +67,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	}
 
 	if (flip) {
-		flip_image_over_x_axis(image)
+		image = flip_image_over_x_axis(image)
 	}
 
 	ctx.putImageData(image, 0, 0)
