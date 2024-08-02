@@ -39,8 +39,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	}
 	
 	const ctx = canvas.getContext('2d')
-	
-	const image = ctx.createImageData(image_width, num_lines)
+	let image = ctx.createImageData(image_width, num_lines)
 
 
 	const pixels = []
