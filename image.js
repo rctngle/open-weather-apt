@@ -1,10 +1,10 @@
 import { createCanvas } from 'canvas'
 import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants.js'
-import { equalizeHistogram } from './equalize.js'
+import { equalize_histogram } from './equalize.js'
 
 // export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-export const create_image = (signal, sync_positions, sync, channel, equalize, canvas = null) => {
+export const create_image = (signal, sync_positions, sync, channel, equalize, flip, canvas = null) => {
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
@@ -62,14 +62,33 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, ca
 		}
 	}
 
-
 	if (equalize) {
-		equalizeHistogram(image, channel)
+		equalize_histogram(image, channel)
+	}
+
+	if (flip) {
+		flip_image_over_x_axis(image)
 	}
 
 	ctx.putImageData(image, 0, 0)
 
 	return canvas
+}
+
+const flip_image_over_x_axis = image => {
+	const { width, height } = image
+	const newImage = new ImageData(width, height)
+	
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			for (let channel = 0; channel < 4; channel++) {
+				// Set the pixel in the new image to the pixel from the corresponding position in the original image
+				newImage.data[(y * width + x) * 4 + channel] = image.data[((height - y - 1) * width + x) * 4 + channel]
+			}
+		}
+	}
+
+	return newImage
 }
 
 export function generate_image_histogram(canvas) {

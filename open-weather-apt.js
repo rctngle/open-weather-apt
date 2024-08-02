@@ -8,6 +8,7 @@ const sync = (process.argv[4] && process.argv[4] === '0') ? false : true
 const mode = process.argv[5] || 'cos'
 const channel = process.argv[6] || 'AB'
 const equalize = (process.argv[7] && process.argv[7] === '0') ? false : true
+const flip = (process.argv[7] && process.argv[7] === '0') ? false : true
 
 // read the wav
 const buffer = fs.readFileSync(audioPath)
@@ -22,7 +23,7 @@ signal = demod_filter(signal, mode)
 const sync_positions = find_sync(signal)
 
 // create image
-const canvas = create_image(signal, sync_positions, sync, channel, equalize)
+const canvas = create_image(signal, sync_positions, sync, channel, equalize, flip)
 
 // generate signal histogram
 const signal_histogram = generate_histogram(signal, 1000)
