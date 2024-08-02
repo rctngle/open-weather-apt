@@ -1,4 +1,4 @@
-import { createCanvas } from 'canvas'
+import { createCanvas, ImageData as NodeImageData } from 'canvas'
 import { PX_PER_CHANNEL, PX_PER_ROW, SAMPLE_RATE, FINAL_RATE } from './constants.js'
 import { equalize_histogram } from './equalize.js'
 
@@ -31,16 +31,19 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 		}
 	}
 
+	let flippedImage
+
 	if (canvas) {
 		canvas.width = image_width
 		canvas.height = num_lines
+		flippedImage = new ImageData(image_width, num_lines)
 	} else {
 		canvas = createCanvas(image_width, num_lines)	
+		flippedImage = new NodeImageData(image_width, num_lines)
 	}
 	
 	const ctx = canvas.getContext('2d')
 	let image = ctx.createImageData(image_width, num_lines)
-
 
 	const pixels = []
 	for (let line = 0; line < lines.length; line++) {
@@ -66,7 +69,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	}
 
 	if (flip) {
-		image = flip_image_over_x_axis(image)
+		image = flip_image_over_x_axis(flippedImage, image)
 	}
 
 	ctx.putImageData(image, 0, 0)
@@ -74,20 +77,19 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	return canvas
 }
 
-const flip_image_over_x_axis = image => {
+const flip_image_over_x_axis = (flippedImage, image) => {
 	const { width, height } = image
-	const newImage = new ImageData(width, height)
 	
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
 			for (let channel = 0; channel < 4; channel++) {
 				// Set the pixel in the new image to the pixel from the corresponding position in the original image
-				newImage.data[(y * width + x) * 4 + channel] = image.data[((height - y - 1) * width + x) * 4 + channel]
+				flippedImage.data[(y * width + x) * 4 + channel] = image.data[((height - y - 1) * width + x) * 4 + channel]
 			}
 		}
 	}
 
-	return newImage
+	return flippedImage
 }
 
 export function generate_image_histogram(canvas) {
