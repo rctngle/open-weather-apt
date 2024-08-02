@@ -1,4 +1,4 @@
-export const equalizeHistogram = (image, channel) => {
+export const equalize_histogram = (image, channel) => {
 	let data = image.data
 	let width = image.width
 	let halfWidth = width / 2
