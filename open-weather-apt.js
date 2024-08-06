@@ -8,7 +8,7 @@ const sync = (process.argv[4] && process.argv[4] === '0') ? false : true
 const mode = process.argv[5] || 'cos'
 const channel = process.argv[6] || 'AB'
 const equalize = (process.argv[7] && process.argv[7] === '0') ? false : true
-const flip = (process.argv[7] && process.argv[7] === '0') ? false : true
+const flip = (process.argv[8] && process.argv[8] === '1') ? true : false
 
 // read the wav
 const buffer = fs.readFileSync(audioPath)
