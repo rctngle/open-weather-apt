@@ -14,16 +14,17 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	const lines = []
 	let num_lines = 0
 
+	const samples_per_line = (SAMPLE_RATE / 2)
+
 	if (sync) {
-		num_lines = sync_positions.length
 		// to produce a synced image, get lines by sync position
+		num_lines = sync_positions.length
 		for (let line = 0; line < sync_positions.length-1; line++) {
-			const row_samples = signal.slice(sync_positions[line][0], sync_positions[line+1][0])
+			const row_samples = signal.slice(sync_positions[line][0], sync_positions[line][0] + samples_per_line) // wcl
 			lines.push(row_samples)
-		}	
+		}
 	} else {
 		// to produce an unsynced image, start a new line every 6240 samples
-		const samples_per_line = (SAMPLE_RATE / 2)
 		num_lines = Math.floor(signal.length / samples_per_line)
 		for (let line = 0; line < num_lines; line++) {
 			const row_samples = signal.slice(line * samples_per_line, line * samples_per_line + samples_per_line)
