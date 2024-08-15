@@ -1,5 +1,5 @@
-import FFT from 'fft.js'
-// import FFT from './fft.js'
+// import FFT from 'fft.js'
+import FFT from './fft.js'
 
 export const demodulate = (signal, mode) => {
 
