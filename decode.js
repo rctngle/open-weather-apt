@@ -28,7 +28,11 @@ import {
 export const decode = buffer => {
 
 	const result = wav.decode(buffer)
-	const data = result.channelData[0]
+	let data = result.channelData[0]
+	let last_good_value_idx = data.findLastIndex((val) => ! isNaN(val))
+	data = data.slice(0, last_good_value_idx + 1)
+
+
 	let signal = new Array(data.length)
 	for (let idx = 0; idx < data.length; idx++) {
 		signal[idx] = data[idx] * 32768
