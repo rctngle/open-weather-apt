@@ -4,7 +4,7 @@ import { equalize_histogram } from './equalize.js'
 
 // export const create_image = (buffer, sync, mode, channel, equalize, canvas = null) => {
 
-export const create_image = (signal, sync_positions, sync, channel, equalize, flip, canvas = null) => {
+export const create_image = (signal, sync_positions, sync, channel, equalize, rotate, canvas = null) => {
 
 	const pixel_start = get_pixel_start(channel)
 	const image_width = get_image_width(channel)
@@ -32,15 +32,15 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 		}
 	}
 
-	let flippedImage
+	let rotatedImage
 
 	if (canvas) {
 		canvas.width = image_width
 		canvas.height = num_lines
-		flippedImage = new ImageData(image_width, num_lines)
+		rotatedImage = new ImageData(image_width, num_lines)
 	} else {
 		canvas = createCanvas(image_width, num_lines)	
-		flippedImage = new NodeImageData(image_width, num_lines)
+		rotatedImage = new NodeImageData(image_width, num_lines)
 	}
 	
 	const ctx = canvas.getContext('2d')
@@ -69,8 +69,8 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 		equalize_histogram(image, channel)
 	}
 
-	if (flip) {
-		image = flip_image_over_x_axis(flippedImage, image)
+	if (rotate) {
+		image = rotate_image_180_degrees(rotatedImage, image)
 	}
 
 	ctx.putImageData(image, 0, 0)
@@ -78,6 +78,7 @@ export const create_image = (signal, sync_positions, sync, channel, equalize, fl
 	return canvas
 }
 
+/*
 const flip_image_over_x_axis = (flippedImage, image) => {
 	const { width, height } = image
 	
@@ -92,6 +93,23 @@ const flip_image_over_x_axis = (flippedImage, image) => {
 
 	return flippedImage
 }
+*/
+
+const rotate_image_180_degrees = (rotatedImage, image) => {
+	const { width, height } = image
+	
+	for (let y = 0; y < height; y++) {
+		for (let x = 0; x < width; x++) {
+			for (let channel = 0; channel < 4; channel++) {
+				// Set the pixel in the new image to the pixel from the corresponding position in the original image
+				rotatedImage.data[(y * width + x) * 4 + channel] = image.data[((height - y - 1) * width + (width - x - 1)) * 4 + channel]
+			}
+		}
+	}
+
+	return rotatedImage
+}
+
 
 export function generate_image_histogram(canvas) {
 
